@@ -1,12 +1,24 @@
 from django.db import models
 from django.conf import settings
 
+class Language(models.Model):
+    language_name = models.CharField(max_length=100)
+    language_code = models.CharField(max_length=5)
+
 class Article(models.Model):
     user_id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     created_date = models.DateTimeField(auto_now_add=True)
 
+class UserLanguage(models.Model):
+    user_id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    language = models.ForeignKey(Language, on_delete=models.SET_NULL, null=True)
+
+class ArticleLanguage(models.Model):
+    article_id = models.ForeignKey(Article, on_delete=models.CASCADE)
+    language = models.ForeignKey(Language, on_delete=models.SET_NULL, null=True)
+
 class ArticleVersion(models.Model):
-    article_id = models.ForeignKey(Article, on_delete=models.SET_NULL, null=True)
+    article_id = models.ForeignKey(Article, on_delete=models.CASCADE)
     user_id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     title = models.CharField(max_length=100)
     date_of_edit = models.DateTimeField(auto_now=True)
@@ -15,6 +27,7 @@ class ArticleVersion(models.Model):
     body = models.TextField()
     keywords = models.CharField(max_length=100)
     verified = models.BooleanField()
+    #verified by ?
 
 class ActivityType(models.Model):
     value = models.CharField(max_length=1)
@@ -38,3 +51,4 @@ class Report(models.Model):
     version_id = models.ForeignKey(ArticleVersion, on_delete=models.SET_NULL, null=True)
     user_id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     verified = models.BooleanField()
+

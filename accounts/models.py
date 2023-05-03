@@ -7,3 +7,4 @@ class CustomUser(AbstractUser):
     age = models.PositiveSmallIntegerField(null=True, default=18)
     user_score = models.IntegerField(null=True)
     user_role = models.CharField(max_length=100)
+    user_enable = models.BooleanField(null=True)
