@@ -8,6 +8,7 @@ class Language(models.Model):
 class Article(models.Model):
     user_id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     created_date = models.DateTimeField(auto_now_add=True)
+    
 
 class UserLanguage(models.Model):
     user_id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
