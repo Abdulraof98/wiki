@@ -3,7 +3,7 @@
 
 1.Download the Project from GitHub
 
-2.Create Virtual Environment you project repository
+2.Create Virtual Environment in your project repository:
 ` python -m venv myenv`
 
 3.Activate your virtual Env:
