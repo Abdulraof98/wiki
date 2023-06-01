@@ -1,5 +1,6 @@
 # Wiki-aryia-backend
 To run a Django project follow these steps:
+
 1.Download the Project from GitHub
 
 2.Create Virtual Environment you project repository
