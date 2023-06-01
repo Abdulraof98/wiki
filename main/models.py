@@ -6,18 +6,11 @@ class Language(models.Model):
     language_code = models.CharField(max_length=5)
 
 class Article(models.Model):
+    # title = models.CharField(max_length=100)
     user_id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     created_date = models.DateTimeField(auto_now_add=True)
-    
-
-class UserLanguage(models.Model):
-    user_id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    language = models.ForeignKey(Language, on_delete=models.SET_NULL, null=True)
-
-class ArticleLanguage(models.Model):
-    article_id = models.ForeignKey(Article, on_delete=models.CASCADE)
-    language = models.ForeignKey(Language, on_delete=models.SET_NULL, null=True)
-
+    def __str__(self):
+        return f'{self.user_id}'    
 class ArticleVersion(models.Model):
     article_id = models.ForeignKey(Article, on_delete=models.CASCADE)
     user_id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -29,9 +22,20 @@ class ArticleVersion(models.Model):
     keywords = models.CharField(max_length=100)
     verified = models.BooleanField()
     #verified by ?
+    def __str__(self):
+        return f'{self.title} -- {self.description}'
+
+class UserLanguage(models.Model):
+    user_id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    language = models.ForeignKey(Language, on_delete=models.SET_NULL, null=True)
+
+class ArticleLanguage(models.Model):
+    article_id = models.ForeignKey(Article, on_delete=models.CASCADE)
+    language = models.ForeignKey(Language, on_delete=models.SET_NULL, null=True)
+
 
 class ActivityType(models.Model):
-    value = models.CharField(max_length=1)
+    value = models.CharField(max_length=50)
 
 
 class UserActivity(models.Model):
