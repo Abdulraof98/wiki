@@ -8,7 +8,7 @@ To run a Django project follow these steps:
 4.Install all the requirement packages:
 # pip install -r requirements.txt
 5.connect your databases in /wikiariya/settings.py
-# INSTALLED_APPS = [
+ INSTALLED_APPS = [
 'ENGINE': 'django.db.backends.mysql',
         'NAME': 'wikiariya',
         'HOST': 'localhost',
