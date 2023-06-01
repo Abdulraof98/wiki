@@ -27,6 +27,7 @@
 
 7.Run the project
 ` python manage.py runserver`
+8.Open this url : `http://127.0.0.1:8000/articles/`
 
 
 
