@@ -1,8 +1,4 @@
 from django.contrib import admin
-<<<<<<< Updated upstream
-
-# Register your models here.
-=======
 from .models import ArticleVersion, Article, ActivityType,Comment, Report, UserActivity
 # Register your models here.
 class ArticleAdmin(admin.ModelAdmin):
@@ -29,4 +25,3 @@ admin.site.register(ActivityType,ActivityTypeAdmin)
 admin.site.register(UserActivity,UserActivityAdmin)
 admin.site.register(Comment,CommentAdmin)
 admin.site.register(Report,ReportAdmin)
->>>>>>> Stashed changes
