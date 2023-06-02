@@ -6,8 +6,8 @@ from .views import SingleAPIView
 from .views import VersionsAPIView,UserActivityAPIView
 
 urlpatterns = [
-    path('/', ArticleAPIView.as_view()),
-    path('/<int:pk>/', SingleAPIView.as_view()),
-    path('/versions/<int:pk>/', VersionsAPIView.as_view()),
-    path('/user-activites/<int:param>/', UserActivityAPIView.as_view()),
+    path('', ArticleAPIView.as_view()),
+    path('<int:pk>/', SingleAPIView.as_view()),
+    path('versions/<int:pk>/', VersionsAPIView.as_view()),
+    path('user-activites/<int:param>/', UserActivityAPIView.as_view()),
 ]
