@@ -54,8 +54,11 @@ class UserActivityAPIView(APIView):
            if activities: 
             activity_name="dummey"
             serializer = UserActivitySerializer(activities,many=True, context={'activity_name': activity_name}) #many records
-
-            return JsonResponse({'UserActivity':serializer.data},safe=False)
+            data  = serializer.data
+            print(data[0]['user_id'])
+            print(type(data))
+            # data.append(new_data)
+            return JsonResponse({'UserActivity':data},safe=False)
         except UserActivity.DoesNotExist:
             return Response({'message': 'UserActivity not found.'}, status=404)
     # @transaction.atomic
