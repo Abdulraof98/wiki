@@ -11,10 +11,10 @@ class ActivityTypeAdmin(admin.ModelAdmin):
     list_display = ['id','value']
 
 class UserActivityAdmin(admin.ModelAdmin):
-    list_display = ['type_of_activity','article_id', 'user_id']
+    list_display = ['type_of_activity','article_id', 'user_id','user_id_id']
 
 class CommentAdmin(admin.ModelAdmin):
-    list_display = ['article_id','comment', 'user_id']
+    list_display = ['article_id','comment', 'user_id','user_id_id']
 
 class ReportAdmin(admin.ModelAdmin):
     list_display = ['details','user_id', 'version_id']

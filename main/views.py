@@ -1,9 +1,9 @@
 from django.shortcuts import render
 
-from .models import Article, UserActivity
+from .models import Article, UserActivity,Comment,ActivityType
 from .models import ArticleVersion
 from .serializers import ArticleSerializer
-from .serializers import ArticleVersionSerializer,UserActivitySerializer
+from .serializers import ArticleVersionSerializer,UserActivitySerializer,CommentSerializer
 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -14,6 +14,8 @@ from accounts.models import CustomUser
 from accounts.serializers import UserSerializer
 import json
 from django.http import JsonResponse
+from django.db import transaction
+# from rest_framework import viewsets
 # For react app
 # def index(request):
 # 	return render(request, 'index.html')
@@ -43,30 +45,48 @@ class VersionsAPIView(APIView):
 from django.core import serializers
 
 class UserActivityAPIView(APIView):
-    def get(self, request,param):
-        user = CustomUser.objects.get(id=param)
+    def get(self, request,pk):
+        user = CustomUser.objects.get(id=pk)
+        # Get the activities of the current user that 
+        # its ID is forignKey in useractivity table
         activities = user.useractivity_set.all()
-        # return JsonResponse({"user":user,"activities":activities})
-        # user_data = serializers.serialize('python', [user])[0]['fields']
-        # activities_data = list(activities.values())
-
-        # return JsonResponse({"user": user_data, "activities": activities_data})
         try:
            if activities: 
-        #     userdetails = UserSerializer(user,data=request.data) 
-            serializer = UserActivitySerializer(activities,many=True) #many records
+            activity_name="dummey"
+            serializer = UserActivitySerializer(activities,many=True, context={'activity_name': activity_name}) #many records
 
             return JsonResponse({'UserActivity':serializer.data},safe=False)
         except UserActivity.DoesNotExist:
             return Response({'message': 'UserActivity not found.'}, status=404)
+    # @transaction.atomic
+    def post(self, request):
+        with transaction.atomic():
 
-        serializer = UserActivitySerializer(activities, data=request.data)
-        if serializer.is_valid() :
-            serializer.save()
-            return Response(serializer.data, status=200)
+            serializer = UserActivitySerializer(data=request.data)
+            # This is for post method
+            if serializer.is_valid() :
+                serializer.save()
+                return Response(serializer.data, status=200)
 
         return Response(serializer.errors, status=400)
     
+class CommentAPIView(APIView):
+    def get(self,request,pk=None):
+        if pk:
+            comments = Comment.objects.get(id=pk) 
+            serializer = CommentSerializer(comments)
+        else:
+             comments = Comment.objects.all()
+             serializer = CommentSerializer(comments, many=True)
+        return Response({'comments': serializer.data})
+        # return Response({"user_id":request.user})
+    def post(self,request):
+
+        comment = Comment.objects.get(id=request.data['id']) 
+        user_id = comment.user_id
+        user = request.user
+        return Response({"user_id":user, "username":request.username})
+   
 # @api_view(['GET','POST'])
 # # @api_view('GET')
 # def articles(request):
