@@ -5,36 +5,45 @@ from .models import UserActivity
 from .models import Report
 from .models import Comment
 from .models import ActivityType
+import json
 
-
-class ArticleSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Article
-        fields = ['id','user_id']
 
 class ArticleVersionSerializer(serializers.ModelSerializer):
     class Meta:
         model = ArticleVersion
         fields = '__all__'
+
+class ArticleSerializer(serializers.ModelSerializer):
+    
+    artical_detail = serializers.SerializerMethodField("_get_title_name")
+    class Meta:
+        model = Article
+        fields = ['id','user_id','artical_detail']
+
+    def _get_title_name(self,obj):
+        article_versions = obj.articleversion_set.latest('date_of_edit')
+        serializer = ArticleVersionSerializer(article_versions)
+        return serializer.data
+        # title_list = [article.title for article in article_versions]
+        # return title_list
+    
 class ActivityTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ActivityType
         fields = '__all__'
 class UserActivitySerializer(serializers.ModelSerializer):
 
-    # the value of source should be same as an attr of the child class
-    activity_type = ActivityTypeSerializer(source='type_of_activity', read_only=True) 
+    activity_name = serializers.SerializerMethodField("_get_type_name")
+
+    def _get_type_name(self, driver_object):
+
+        # Return (UserActivity)obj->type_of_activity->{(forignKey)(ActivityType)->value}
+        return driver_object.type_of_activity.value
     class Meta:
         model = UserActivity
-        fields =['user_id','article_id','type_of_activity','activity_type','date_of_activity']
+        fields =['user_id','article_id','type_of_activity','activity_name','date_of_activity']
         # depth = 1 #Recorsive loop to first parent
-    
-    # type_of_activity  = serializers.SerializerMethodField('activity_name')
-    # def get_user_id(self,obj):
-    #     # Custom logic to retrieve custom data
-    #     # You can access request or view attributes through self.context
-    #     id1 = self.context.get('activity_name')
-    #     return id1
+
 class ReportSerializer(serializers.ModelSerializer):
     class Meta:
         model = Report
