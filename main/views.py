@@ -1,9 +1,7 @@
 from django.shortcuts import render
-
 from .models import Article, UserActivity,Comment,ActivityType,ArticleVersion
-from .models import ArticleVersion
-from .serializers import ArticleSerializer
-from .serializers import ArticleVersionSerializer,UserActivitySerializer,CommentSerializer
+from .serializers import ArticleSerializer,ArticleVersionSerializer,UserActivitySerializer
+from .serializers import CommentSerializer,ArticalVersionSerializer__2
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -13,10 +11,9 @@ from rest_framework.views import APIView
 from accounts.models import CustomUser
 from accounts.serializers import UserSerializer
 import json
-from django.http import JsonResponse
 from django.db import transaction
 # from rest_framework import viewsets
-# For react app
+# For react app ---
 # def index(request):
 # 	return render(request, 'index.html')
 # Create your views here.
@@ -27,11 +24,11 @@ class ArticleList(APIView):
         serializer = ArticleSerializer(queryset, many=True, context={'request': request})
         return Response(serializer.data)
     
-    def post(self, request):
-        serializer = ArticleSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    # def post(self, request):
+    #     serializer = ArticleSerializer(data=request.data)
+    #     serializer.is_valid(raise_exception=True)
+    #     serializer.save()
+    #     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class ArtilceDetail(APIView):
@@ -60,15 +57,24 @@ class ArticleVersionList(APIView):
         return Response(serializer.data)
     
     def post(self, request):
+        print("DDDDD")
+        print(request.data)
+        
         serializer = ArticleSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     
-
+class ArticleVersions(APIView):
+    def get(self,request):
+        queryset = Article.objects.all()
+        serializer = ArticalVersionSerializer__2(queryset, many=True, context={'context': request})
+        return Response(serializer.data)
+    
 class ArticleVersionDetail(APIView):
     def get(self, request, pk):
-        article_version = get_object_or_404(ArticleVersion, pk=pk)
+        # article_version = get_object_or_404(ArticleVersion, pk=pk)
+        article_version = ArticleVersion.objects.filter(article_id=pk).order_by('-date_of_edit').first()
         serializer = ArticleVersionSerializer(article_version)
         return Response(serializer.data)
     

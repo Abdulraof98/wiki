@@ -1,15 +1,14 @@
 
 from django.contrib import admin
 from django.urls import path, include,re_path
-from .views import ArticleAPIView
-from .views import SingleAPIView
-from .views import ArticleList,ArtilceDetail,ArticleVersionList,UserActivityList,ArticleVersionDetail
+from .views import ArticleList,ArtilceDetail,ArticleVersionList,ArticleVersionDetail,ArticleVersions
 
 urlpatterns = [
     path("article/", ArticleList.as_view()),
-    path("article/<int:pk>", ArtilceDetail.as_view()),
+    path("article/<int:pk>", ArtilceDetail.as_view(), name='article-detail'),
     path("article-version/", ArticleVersionList.as_view()),
-    path("article-version/<int:pk>", ArticleVersionDetail.as_view())
+    path("article-version/<int:pk>", ArticleVersionDetail.as_view()),
+    path("article-versions", ArticleVersions.as_view()), #display all versions of an article
 ]
 # urlpatterns = [
 #     path('article', ArticleAPIView.as_view()),

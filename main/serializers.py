@@ -5,28 +5,52 @@ from .models import UserActivity
 from .models import Report
 from .models import Comment
 from .models import ActivityType
-import json
-
+from django.db import transaction
 
 class ArticleVersionSerializer(serializers.ModelSerializer):
+    verified = serializers.BooleanField(required=False)
     class Meta:
         model = ArticleVersion
-        fields = '__all__'
+        fields = ['id', 'title', 'date_of_edit', 'description', 'refrences', 'body', 'keywords', 'verified', 'user_id']
 
 class ArticleSerializer(serializers.ModelSerializer):
+    article_version = ArticleVersionSerializer()
+    
+    class Meta:
+        model = Article
+        fields = ['id', 'user_id', 'article_version']
+    
+    def create(self, validated_data):
+        article_version_data = validated_data.pop('article_version')
+        if article_version_data:
+            with transaction.atomic():
+                article = Article.objects.create(**validated_data)
+                article_v = ArticleVersion.objects.create(article_id=article, **article_version_data)
+                
+        return article_v 
+
+
+
+
+
+
+class ArticalVersionSerializer__2(serializers.ModelSerializer):
+    
     
     artical_detail = serializers.SerializerMethodField("_get_title_name")
     class Meta:
         model = Article
-        fields = ['id','user_id','artical_detail']
+        fields = ['id','user_id','artical_detail'] 
 
     def _get_title_name(self,obj):
-        article_versions = obj.articleversion_set.latest('date_of_edit')
-        serializer = ArticleVersionSerializer(article_versions)
+        ArticleVersionSerializer
+        # article_versions = obj.articleversion_set.all()
+        article_versions = obj.article_version.all()
+
+        serializer = ArticleVersionSerializer(article_versions, many=True)
         return serializer.data
-        # title_list = [article.title for article in article_versions]
-        # return title_list
     
+ 
 class ActivityTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ActivityType

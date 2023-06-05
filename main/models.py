@@ -10,9 +10,10 @@ class Article(models.Model):
     user_id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     created_date = models.DateTimeField(auto_now_add=True)
     def __str__(self):
-        return f'{self.user_id}'    
+        return f'{self.id}'    
+    
 class ArticleVersion(models.Model):
-    article_id = models.ForeignKey(Article, on_delete=models.CASCADE)
+    article_id = models.ForeignKey(Article, on_delete=models.CASCADE,related_name='article_version')
     user_id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     title = models.CharField(max_length=100)
     date_of_edit = models.DateTimeField(auto_now=True)
@@ -20,9 +21,10 @@ class ArticleVersion(models.Model):
     refrences = models.CharField(max_length=255)
     body = models.TextField()
     keywords = models.CharField(max_length=100)
-    verified = models.BooleanField()
+    verified = models.BooleanField(default=False)
     #verified by ?
     def __str__(self):
+
         return f'{self.title} -- {self.description}'
 
 class UserLanguage(models.Model):
