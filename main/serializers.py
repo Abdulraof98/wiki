@@ -14,13 +14,18 @@ class ArticleVersionSerializer(serializers.ModelSerializer):
         fields = ['id', 'title', 'date_of_edit', 'description', 'refrences', 'body', 'keywords', 'verified', 'user_id']
 
 class ArticleSerializer(serializers.ModelSerializer):
-
-    article_version = ArticleVersionSerializer(many=True)
+    # article_version = ArticleVersionSerializer(many=True)
+    article_version = serializers.SerializerMethodField()
     
     class Meta:
         model = Article
         fields = ['id', 'user_id', 'article_version']
-    
+
+    def get_article_version(self, article):
+        latest_article_version = article.article_version.order_by('-id').first()
+        if latest_article_version:
+            return ArticleVersionSerializer(latest_article_version).data
+        return None
     def create(self, validated_data):
         article_version_data = validated_data.pop('article_version')
         if article_version_data:
