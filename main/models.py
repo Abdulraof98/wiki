@@ -23,9 +23,9 @@ class ArticleVersion(models.Model):
     keywords = models.CharField(max_length=100)
     verified = models.BooleanField(default=False)
     #verified by ?
-    def __str__(self):
+    # def __str__(self):
 
-        return f'{self.title} -- {self.description}'
+    #     return f'{self.title} -- {self.description}'
 
 class UserLanguage(models.Model):
     user_id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -44,7 +44,7 @@ class UserActivity(models.Model):
     user_id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     article_id = models.ForeignKey(Article, on_delete=models.SET_NULL, null=True)
     type_of_activity = models.ForeignKey(ActivityType, on_delete =models.SET_NULL, null=True)
-    date_of_activity = models.DateTimeField() # update or only create ?
+    date_of_activity = models.DateTimeField(auto_now=True) # update or only create ?
 
 class Comment(models.Model):
     user_id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)

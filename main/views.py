@@ -12,12 +12,21 @@ from accounts.models import CustomUser
 from accounts.serializers import UserSerializer
 import json
 from django.db import transaction
+from django.forms.models import model_to_dict
+from django.utils import timezone
 # from rest_framework import viewsets
 # For react app ---
 # def index(request):
 # 	return render(request, 'index.html')
 # Create your views here.
-
+def create_user_activity(action,article_id):
+    act_type = ActivityType.objects.filter(value = action).first()
+    current_user = CustomUser.objects.get(id=1)
+    user_activity = UserActivity.objects.create(article_id=article_id,user_id= current_user,type_of_activity=act_type)
+    if user_activity:
+        return user_activity
+    return False
+    
 class ArticleList(APIView):
     def get(self, request):
         queryset = Article.objects.all()
@@ -55,15 +64,34 @@ class ArticleVersionList(APIView):
         queryset = ArticleVersion.objects.all()
         serializer = ArticleVersionSerializer(queryset, many=True, context={'context': request})
         return Response(serializer.data)
-    
     def post(self, request):
-        print("DDDDD")
-        print(request.data)
+
+        try:
+            with transaction.atomic():
+                data = request.data
+                user = CustomUser.objects.get(id=data['user_id'])
+                current_user = CustomUser.objects.get(id=1)
+                article = Article()
+                article_v = ArticleVersion()
+                article.user_id = user
+                article.save()
+                article_v.article_id = article
+                article_v.title = data['article_version']['title']
+                article_v.user_id = current_user
+                article_v.description = data['article_version']['description']
+                article_v.refrences = data['article_version']['refrences']
+                article_v.body = data['article_version']['body']
+                article_v.keywords = data['article_version']['keywords']
+                article_v.save()
+                create_user_activity('create',article)
+            transaction.commit()
+        except Exception as e:
+            # Rollback the transaction if an exception occurs
+            transaction.rollback()
+            raise e
         
-        serializer = ArticleSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        version_dict = model_to_dict(article_v)
+        return JsonResponse(version_dict, safe=False)
     
 class ArticleVersions(APIView):
     def get(self,request):
@@ -80,10 +108,34 @@ class ArticleVersionDetail(APIView):
     
     def put(self, request, pk):
         article_version = get_object_or_404(ArticleVersion, pk=pk)
-        serializer = ArticleVersionSerializer(article_version, dat=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data)
+
+        try:
+            with transaction.atomic():
+                data = request.data
+                # user = CustomUser.objects.get(id=data['user_id'])
+                current_user = CustomUser.objects.get(id=1)
+                article = get_object_or_404(Article, pk=pk)
+                article_v = get_object_or_404(ArticleVersion, pk=pk)
+                # article.user_id = user
+                # article.save()
+                # article_v.article_id = article
+                article_v.title = data['title']
+                # article_v.user_id = current_user.id
+                article_v.description = data['description']
+                article_v.refrences = data['refrences']
+                article_v.body = data['body']
+                article_v.keywords = data['keywords']
+                article_v.save()
+                create_user_activity('update',article) 
+                
+            transaction.commit()
+        except Exception as e:
+
+            transaction.rollback()
+            raise e
+        
+        version_dict = model_to_dict(article_v)
+        return JsonResponse(version_dict, safe=False)
     
     def delete(self, request, pk):
         article_verion = get_object_or_404(ArticleVersion, pk=pk)

@@ -14,7 +14,8 @@ class ArticleVersionSerializer(serializers.ModelSerializer):
         fields = ['id', 'title', 'date_of_edit', 'description', 'refrences', 'body', 'keywords', 'verified', 'user_id']
 
 class ArticleSerializer(serializers.ModelSerializer):
-    article_version = ArticleVersionSerializer()
+
+    article_version = ArticleVersionSerializer(many=True)
     
     class Meta:
         model = Article
