@@ -3,29 +3,51 @@ from .models import Article
 from .models import ArticleVersion
 from .models import UserActivity
 from .models import Report
-from .models import Comment
+from .models import Like,Comment, Share
 from .models import ActivityType
 from django.db import transaction
 
+# class CommentsSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model:Comment
+class CommentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comment
+        fields = '__all__'
 class ArticleVersionSerializer(serializers.ModelSerializer):
     verified = serializers.BooleanField(required=False)
     class Meta:
         model = ArticleVersion
-        fields = ['id', 'title', 'date_of_edit', 'description', 'refrences', 'body', 'keywords', 'verified', 'user_id']
+        fields = ['id', 'article_id', 'title', 'date_of_edit', 'description', 'refrences', 'body', 'keywords', 'verified', 'user_id', 'status']
 
 class ArticleSerializer(serializers.ModelSerializer):
     # article_version = ArticleVersionSerializer(many=True)
     article_version = serializers.SerializerMethodField()
+    comments = serializers.SerializerMethodField('get_comment')
+    likes = serializers.SerializerMethodField('get_like')
+    shares = serializers.SerializerMethodField('get_share')
     
     class Meta:
         model = Article
-        fields = ['id', 'user_id', 'article_version']
+        fields = ['id', 'user_id', 'article_version','likes','shares','comments']
 
     def get_article_version(self, article):
         latest_article_version = article.article_version.order_by('-id').first()
         if latest_article_version:
             return ArticleVersionSerializer(latest_article_version).data
         return None
+    def get_comment(self,article):
+        comments = article.comment.all()
+        if comments:
+            return CommentSerializer(comments, many=True).data
+        else:
+            return []
+    def get_like(self,article):
+        return article.like.count()
+    
+    def get_share(self,article):
+        return article.share.count()
+    
     def create(self, validated_data):
         article_version_data = validated_data.pop('article_version')
         if article_version_data:
@@ -73,12 +95,16 @@ class UserActivitySerializer(serializers.ModelSerializer):
         model = UserActivity
         fields =['user_id','article_id','type_of_activity','activity_name','date_of_activity']
         # depth = 1 #Recorsive loop to first parent
+class LikeSerializer(serializers.ModelSerializer):
+    class Mete:
+        model = Like
+        fields = '__all__'
 
+class ShareSerializer(serializers.ModelSerializer):
+    class Mete:
+        model = Share
+        fields = '__all__'
 class ReportSerializer(serializers.ModelSerializer):
     class Meta:
         model = Report
-        fields = '__all__'
-class CommentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Comment
         fields = '__all__'

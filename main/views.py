@@ -1,7 +1,7 @@
 from django.shortcuts import render
-from .models import Article, UserActivity,Comment,ActivityType,ArticleVersion
-from .serializers import ArticleSerializer,ArticleVersionSerializer,UserActivitySerializer
-from .serializers import CommentSerializer,ArticalVersionSerializer__2
+from .models import Article, UserActivity, Like, Share, Comment, Report, ActivityType, ArticleVersion
+from .serializers import ArticleSerializer, ArticleVersionSerializer, UserActivitySerializer
+from .serializers import CommentSerializer, ArticalVersionSerializer__2
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -14,11 +14,14 @@ import json
 from django.db import transaction
 from django.forms.models import model_to_dict
 from django.utils import timezone
+from django.db.models import Q
 # from rest_framework import viewsets
 # For react app ---
 # def index(request):
 # 	return render(request, 'index.html')
 # Create your views here.
+
+current_user = CustomUser.objects.get(id=1)
 def create_user_activity(action,article_id):
     act_type = ActivityType.objects.filter(value = action).first()
     current_user = CustomUser.objects.get(id=1)
@@ -26,7 +29,16 @@ def create_user_activity(action,article_id):
     if user_activity:
         return user_activity
     return False
-    
+
+class SearchView(APIView):
+    def get(self,request):
+        data = request.data
+        print(data['search'])
+        articles = ArticleVersion.objects.filter(title__icontains=data['search'])
+        serializer = ArticleVersionSerializer(articles,many=True)
+        return Response(serializer.data)
+
+
 class ArticleList(APIView):
     def get(self, request):
         queryset = Article.objects.all()
@@ -47,16 +59,31 @@ class ArtilceDetail(APIView):
         return Response(serializer.data)
     
     def put(self, request, pk):
-        article = get_object_or_404(Article, pk=pk)
-        serializer = ArticleSerializer(article, data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
+        try:
+            with transaction.atomic():
+
+                article = get_object_or_404(Article, pk=pk)
+                serializer = ArticleSerializer(article, data=request.data)
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+                create_user_activity('update',article.id)
+                transaction.commit()
+        except Exception as e:
+            transaction.rollback()
+            return e
         return Response(serializer.data)
     
-    def delete(self, request, pk):
-        article = get_object_or_404(Article, pk=pk)
-        article.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    def patch(self, request, pk):
+        # Retrieve the object to be updated
+        obj = Article.objects.get(pk=pk)
+
+        # Apply the partial updates from the request data
+        serializer = ArticleSerializer(obj, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        else:
+            return Response(serializer.errors, status=400)
 
 
 class ArticleVersionList(APIView):
@@ -141,19 +168,84 @@ class ArticleVersionDetail(APIView):
         article_verion = get_object_or_404(ArticleVersion, pk=pk)
         article_verion.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-# class UserActivityList(APIView):
-#     def get(self, request,pk=None):
-#         user = CustomUser.objects.get(id=pk)
-#         # Get the activities of the current user that 
-#         # its ID is forignKey in useractivity table
-#         activities = user.useractivity_set.all()
-#         try:
-#            if activities: 
-#             serializer = UserActivitySerializer(activities,many=True, context={'request': request}) #many records
-#             data  = serializer.data
-#             return JsonResponse({'UserActivity':data},safe=False)
-#         except UserActivity.DoesNotExist:
-#             return Response({'message': 'UserActivity not found.'}, status=404)
+    
+class CommentList(APIView):
+    def get(self,request,pk):
+
+            # article = get_object_or_404(Article, pk=pk)
+            comments = Comment.objects.filter(article_id=pk) 
+            serializer = CommentSerializer(comments, many=True)
+            return Response({'comments': serializer.data})
+        # return Response({"user_id":request.user})
+    def post(self,request,pk):
+        try:
+            with transaction.atomic():
+                article = get_object_or_404(Article, pk=pk)
+                Comment.objects.create(article_id=article,user_id= current_user,comment=request.data['comment'])
+                create_user_activity('comment',article.id)
+            transaction.commit()
+        except Exception as e:
+            transaction.rollback()
+            raise e
+        return JsonResponse({"Details": "Comment Created Successfully!"}, safe=False)
+class LikesView(APIView):
+    def get(self,request,pk):
+        pass
+    def post(self,request,pk):
+        try:
+            with transaction.atomic():
+
+                # current_user = request.user.id
+                user = CustomUser.objects.get(id=current_user.id)
+                article = Article.objects.get(id=pk)
+                if Like.objects.filter(user_id=current_user.id).exists():
+                    return JsonResponse({'status':False})
+                Like.objects.create(user = user, article = article)
+                create_user_activity('like',article.id)
+                transaction.commit()
+        except Exception as e:
+            transaction.rollback()
+            return e
+        return JsonResponse({'status':True})
+class ReportsView(APIView):
+    def get(self,request,pk):
+        pass
+    def post(self,request,pk):
+        try:
+            with transaction.atomic():
+                # current_user = request.user.id
+                user = CustomUser.objects.get(id=current_user.id)
+                article = Article.objects.get(id=pk)
+                create_user_activity('report',article.id)
+                if Report.objects.filter(user_id=current_user.id).exists():
+                    return JsonResponse({'status':False})
+                Report.objects.create(user = user, article = article)
+                transaction.commit()
+        except Exception as e:
+            transaction.rollback()
+            return e
+        
+        return JsonResponse({'status':True})
+class UserActivityList(APIView):
+    def get(self, request,pk=None):
+        user = CustomUser.objects.get(id=pk)
+        # Get the activities of the current user that 
+        # its ID is forignKey in useractivity table
+        data = request.data
+        if data['search']:
+            activities = UserActivity.objects.filter(Q(user_id=user.id) & Q(value_icontains=data['search']))
+        else:
+            activities = user.useractivity_set.all()
+        serializer = UserActivitySerializer(activities,many=True)
+        return Response(serializer.data)
+        
+        try:
+           if activities: 
+            serializer = UserActivitySerializer(activities,many=True, context={'request': request}) #many records
+            data  = serializer.data
+            return JsonResponse({'UserActivity':data},safe=False)
+        except UserActivity.DoesNotExist:
+            return Response({'message': 'UserActivity not found.'}, status=404)
     
 # class ArticleAPIView(APIView):
 #     def get(self, request, pk=None):

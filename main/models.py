@@ -20,6 +20,7 @@ class ArticleVersion(models.Model):
     description = models.TextField()
     refrences = models.CharField(max_length=255)
     body = models.TextField()
+    status = models.CharField(max_length=10,default='')
     keywords = models.CharField(max_length=100)
     verified = models.BooleanField(default=False)
     #verified by ?
@@ -46,11 +47,19 @@ class UserActivity(models.Model):
     type_of_activity = models.ForeignKey(ActivityType, on_delete =models.SET_NULL, null=True)
     date_of_activity = models.DateTimeField(auto_now=True) # update or only create ?
 
+class Like(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    article = models.ForeignKey(Article, on_delete=models.CASCADE,related_name='like')
+
 class Comment(models.Model):
     user_id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    article_id = models.ForeignKey(Article, on_delete=models.SET_NULL, null=True)
+    article_id = models.ForeignKey(Article, on_delete=models.SET_NULL, null=True,related_name='comment')
     comment = models.TextField()
     comment_date = models.DateTimeField(auto_now_add=True)
+    
+class Share(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    article = models.ForeignKey(Article, on_delete=models.CASCADE,related_name='share')
 
 class Report(models.Model):
     details = models.TextField()
