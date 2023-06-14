@@ -22,12 +22,12 @@ from django.db.models import Q
 # Create your views here.
 
 current_user = CustomUser.objects.get(id=1)
-def create_user_activity(action,article_id):
+def create_user_activity(action,article):
     act_type = ActivityType.objects.filter(value = action).first()
     current_user = CustomUser.objects.get(id=1)
-    user_activity = UserActivity.objects.create(article_id=article_id,user_id= current_user,type_of_activity=act_type)
+    user_activity = UserActivity.objects.create(article_id=article,user_id= current_user,type_of_activity=act_type)
     if user_activity:
-        return user_activity
+        return True
     return False
 
 class SearchView(APIView):
@@ -67,9 +67,9 @@ class ArtilceDetail(APIView):
                 serializer.is_valid(raise_exception=True)
                 serializer.save()
                 create_user_activity('update',article.id)
-                transaction.commit()
+                
         except Exception as e:
-            transaction.rollback()
+            
             return e
         return Response(serializer.data)
     
@@ -111,10 +111,10 @@ class ArticleVersionList(APIView):
                 article_v.keywords = data['article_version']['keywords']
                 article_v.save()
                 create_user_activity('create',article)
-            transaction.commit()
+            
         except Exception as e:
             # Rollback the transaction if an exception occurs
-            transaction.rollback()
+            
             raise e
         
         version_dict = model_to_dict(article_v)
@@ -155,10 +155,10 @@ class ArticleVersionDetail(APIView):
                 article_v.save()
                 create_user_activity('update',article) 
                 
-            transaction.commit()
+            
         except Exception as e:
 
-            transaction.rollback()
+            
             raise e
         
         version_dict = model_to_dict(article_v)
@@ -182,10 +182,10 @@ class CommentList(APIView):
             with transaction.atomic():
                 article = get_object_or_404(Article, pk=pk)
                 Comment.objects.create(article_id=article,user_id= current_user,comment=request.data['comment'])
-                create_user_activity('comment',article.id)
-            transaction.commit()
+                create_user_activity('comment',article)
+            
         except Exception as e:
-            transaction.rollback()
+            
             raise e
         return JsonResponse({"Details": "Comment Created Successfully!"}, safe=False)
 class LikesView(APIView):
@@ -194,19 +194,24 @@ class LikesView(APIView):
     def post(self,request,pk):
         try:
             with transaction.atomic():
-
+                
                 # current_user = request.user.id
                 user = CustomUser.objects.get(id=current_user.id)
                 article = Article.objects.get(id=pk)
+                
                 if Like.objects.filter(user_id=current_user.id).exists():
+                    print("SSS")
                     return JsonResponse({'status':False})
                 Like.objects.create(user = user, article = article)
-                create_user_activity('like',article.id)
-                transaction.commit()
+                create_user_activity('like',article)
+                
         except Exception as e:
-            transaction.rollback()
-            return e
-        return JsonResponse({'status':True})
+            response_data = {
+                  'error': str(e)  # Convert the TypeError object to a string
+            }
+            return JsonResponse(response_data)
+        
+        return JsonResponse({'status':True}, safe=False)
 class ReportsView(APIView):
     def get(self,request,pk):
         pass
@@ -220,9 +225,9 @@ class ReportsView(APIView):
                 if Report.objects.filter(user_id=current_user.id).exists():
                     return JsonResponse({'status':False})
                 Report.objects.create(user = user, article = article)
-                transaction.commit()
+                
         except Exception as e:
-            transaction.rollback()
+            
             return e
         
         return JsonResponse({'status':True})
