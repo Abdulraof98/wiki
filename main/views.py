@@ -235,7 +235,7 @@ class UserActivityList(APIView):
         if data['search']:
             activities = UserActivity.objects.filter(Q(user_id=user.id) & Q(value_icontains=data['search']))
         else:
-            activities = user.useractivity_set.all()
+            activities = user.useractivity_set.all() 
         serializer = UserActivitySerializer(activities,many=True)
         return Response(serializer.data)
         

@@ -91,7 +91,7 @@ SITE_ID = 1
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'wikiariya',
+        'NAME': 'wikiaryia',
         'HOST': 'localhost',
         'USER': 'root',
         # 'PASSWORD': 'Mysql123456789',
